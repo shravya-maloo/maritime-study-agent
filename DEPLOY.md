@@ -25,7 +25,7 @@ will show you). If it doesn't, get a free Groq key:
 
 ## 3. Put the code on GitHub (5 min)
 
-1. On GitHub, click **New repository**. Name it `study-buddy`. Public is fine
+1. On GitHub, click **New repository**. Name it `maritime-study-agent`. Public is fine
    (there are no secrets in the code). Don't add a README; this project has one.
 2. Upload these files: on the empty repo page click **uploading an existing
    file**, drag in everything in this folder **except** `.venv/` and `data/`,
@@ -37,7 +37,7 @@ will show you). If it doesn't, get a free Groq key:
 
 1. Sign up at <https://maritime.sh> and stay on the **Free** plan. Skip any
    promo code or checkout page.
-2. Create a new agent **from GitHub**, pick your `study-buddy` repo and the
+2. Create a new agent **from GitHub**, pick your `maritime-study-agent` repo and the
    `main` branch. If it asks for a framework, choose custom / "bring your own".
 3. Open the agent's **Environment** settings and add the following. Mark the
    first three as **secret**:

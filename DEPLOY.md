@@ -17,10 +17,11 @@ only into Maritime's Environment settings.
 ## 2. Get an AI key (5 min)
 
 First, check whether Maritime gives you AI credits on the Free plan (step 4
-will show you). If it doesn't, get a free Gemini key:
+will show you). If it doesn't, get a free Groq key:
 
-1. Go to <https://aistudio.google.com>, sign in with a Google account.
-2. Click **Get API key** → **Create API key**. Copy it somewhere private.
+1. Go to <https://console.groq.com> and sign up (Google sign-in works).
+2. Click **API Keys** → **Create API Key**. Copy it (starts with `gsk_`)
+   somewhere private. Groq only shows it once.
 
 ## 3. Put the code on GitHub (5 min)
 
@@ -45,9 +46,9 @@ will show you). If it doesn't, get a free Gemini key:
    |---|---|
    | `TELEGRAM_BOT_TOKEN` | the token from BotFather |
    | `TELEGRAM_WEBHOOK_SECRET` | make one up, like `purple-walrus-quiz-4821` |
-   | `LLM_API_KEY` | your Gemini key (skip if Maritime already lists `OPENAI_API_KEY`) |
-   | `LLM_BASE_URL` | `https://generativelanguage.googleapis.com/v1beta/openai/` (Gemini only) |
-   | `LLM_MODEL` | `gemini-2.5-flash` (Gemini only) |
+   | `LLM_API_KEY` | your Groq key (skip if Maritime already lists `OPENAI_API_KEY`) |
+   | `LLM_BASE_URL` | `https://api.groq.com/openai/v1` (Groq only) |
+   | `LLM_MODEL` | `llama-3.3-70b-versatile` (Groq only) |
 
 4. Wait for the first build to finish (a few minutes). Then copy the agent's
    **HTTPS URL** from the dashboard and add it as one more variable:

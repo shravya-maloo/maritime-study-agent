@@ -59,7 +59,7 @@ and click a button. This one comes to me.
   and `/telegram` rejects requests that don't carry the secret header
   Telegram sends.
 - **Any AI provider:** `quiz.py` uses the OpenAI SDK, so it works with OpenAI,
-  Maritime's built-in credits, or a free Google Gemini key. Only env vars change.
+  Maritime's built-in credits, or a free Groq key. Only env vars change.
 
 ## Settings (environment variables)
 
@@ -69,8 +69,8 @@ and click a button. This one comes to me.
 | `TELEGRAM_WEBHOOK_SECRET` | yes | Any long random string you make up. Mark it secret. |
 | `PUBLIC_URL` | yes | The agent's HTTPS address from the Maritime dashboard |
 | `LLM_API_KEY` | yes* | AI key. *Not needed if Maritime provides `OPENAI_API_KEY`. |
-| `LLM_BASE_URL` | for Gemini | `https://generativelanguage.googleapis.com/v1beta/openai/` |
-| `LLM_MODEL` | no | Default `gpt-4o-mini`; use `gemini-2.5-flash` for Gemini |
+| `LLM_BASE_URL` | for Groq | `https://api.groq.com/openai/v1` |
+| `LLM_MODEL` | no | Default `gpt-4o-mini`; use `llama-3.3-70b-versatile` for Groq |
 | `QUIZ_CRON` | no | Default `0 21 * * *` (9:00 pm) |
 | `QUIZ_TIMEZONE` | no | Default `America/Los_Angeles` |
 | `TELEGRAM_MODE` | no | `webhook` (default) or `poll` |
@@ -82,7 +82,7 @@ You can try the quiz flow without Telegram, using the `/chat` endpoint:
 ```bash
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-export DATA_DIR=./data LLM_API_KEY=your-key   # plus LLM_BASE_URL/LLM_MODEL for Gemini
+export DATA_DIR=./data LLM_API_KEY=your-key   # plus LLM_BASE_URL/LLM_MODEL for Groq
 python start.py
 # in a second terminal:
 curl -s localhost:8080/chat -H 'Content-Type: application/json' -d '{"message": "/quiz"}'

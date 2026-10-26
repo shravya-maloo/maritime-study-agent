@@ -4,9 +4,9 @@ Works with any OpenAI-compatible API. Set these in Maritime's env settings:
 
     LLM_API_KEY    your key (falls back to OPENAI_API_KEY, which Maritime
                    injects on plans that include AI credits)
-    LLM_BASE_URL   leave empty for OpenAI; for a free Google Gemini key use
-                   https://generativelanguage.googleapis.com/v1beta/openai/
-    LLM_MODEL      e.g. gpt-4o-mini, or gemini-2.5-flash for Gemini
+    LLM_BASE_URL   leave empty for OpenAI; for a free Groq key use
+                   https://api.groq.com/openai/v1
+    LLM_MODEL      e.g. gpt-4o-mini, or llama-3.3-70b-versatile for Groq
 """
 
 import json

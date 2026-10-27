@@ -13,6 +13,7 @@ How it fits together on Maritime:
 Endpoints Maritime needs: GET /health, POST /chat, GET /schedules.
 """
 
+import hashlib
 import os
 import threading
 
@@ -22,12 +23,12 @@ import quiz
 import storage
 import telegram
 
-QUIZ_CRON = os.getenv("QUIZ_CRON", "0 21 * * *")  # 9:00 pm every day
-QUIZ_TIMEZONE = os.getenv("QUIZ_TIMEZONE", "America/Los_Angeles")
-WEBHOOK_SECRET = os.getenv("TELEGRAM_WEBHOOK_SECRET", "")
-# "webhook": Telegram pushes replies to us (instant).
-# "poll": we wake every few minutes in the evening and fetch replies.
-TELEGRAM_MODE = os.getenv("TELEGRAM_MODE", "webhook")
+# Settings are read with os.getenv each time they're used (not once at the top),
+# because Maritime hot-reloads env var edits into the running agent.
+#   QUIZ_CRON       when the nightly quiz goes out, default 9:00 pm every day
+#   QUIZ_TIMEZONE   default America/Los_Angeles
+#   TELEGRAM_MODE   "webhook": Telegram pushes replies to us (instant)
+#                   "poll": we wake every few minutes in the evening and fetch replies
 
 HELP = """Hi! I'm your study buddy. Every night I'll quiz you on your notes.
 
@@ -53,12 +54,14 @@ def health():
 @app.get("/schedules")
 def schedules():
     """Maritime reads this and wakes us up at these times."""
+    connect_telegram()  # Maritime calls this often while we're awake
+    timezone = os.getenv("QUIZ_TIMEZONE", "America/Los_Angeles")
     jobs = [
-        {"id": "nightly-quiz", "cron": QUIZ_CRON, "tz": QUIZ_TIMEZONE,
+        {"id": "nightly-quiz", "cron": os.getenv("QUIZ_CRON", "0 21 * * *"), "tz": timezone,
          "prompt": "nightly-quiz", "enabled": True},
     ]
-    if TELEGRAM_MODE == "poll":
-        jobs.append({"id": "check-replies", "cron": "*/5 18-23 * * *", "tz": QUIZ_TIMEZONE,
+    if os.getenv("TELEGRAM_MODE", "webhook") == "poll":
+        jobs.append({"id": "check-replies", "cron": "*/5 18-23 * * *", "tz": timezone,
                      "prompt": "check-replies", "enabled": True})
     return jobs
 
@@ -67,6 +70,7 @@ def schedules():
 def chat(body: dict):
     """Scheduled wake-ups land here, and so does the Maritime dashboard's Chat tab."""
     message = body.get("message", "").strip()
+    connect_telegram()
     with lock:
         if body.get("source") == "scheduled" and message == "nightly-quiz":
             reply = handle_text("/quiz")
@@ -83,21 +87,43 @@ def chat(body: dict):
 # ---------- Telegram ----------
 
 @app.on_event("startup")
-def register_webhook():
-    """If PUBLIC_URL is set, point the Telegram bot at our /telegram endpoint."""
+def connect_telegram():
+    """Point the Telegram bot at our /telegram endpoint, once per setting change.
+
+    Runs on boot and again on every /schedules and /chat request. Maritime
+    resumes a sleeping agent instead of rebooting it, so boot alone could miss
+    a PUBLIC_URL you add later.
+    """
     public_url = os.getenv("PUBLIC_URL", "").rstrip("/")
-    if TELEGRAM_MODE == "webhook" and public_url and os.getenv("TELEGRAM_BOT_TOKEN"):
+    secret = os.getenv("TELEGRAM_WEBHOOK_SECRET", "")
+    token = os.getenv("TELEGRAM_BOT_TOKEN", "")
+    if os.getenv("TELEGRAM_MODE", "webhook") != "webhook" or not public_url or not token:
+        return
+
+    # A fingerprint of the settings, so we only call Telegram when one changes
+    # (and never write the secret itself to disk).
+    fingerprint = hashlib.sha256(f"{public_url}|{secret}|{token}".encode()).hexdigest()
+    with lock:
+        state = storage.load_state()
+        if state.get("webhook_fingerprint") == fingerprint:
+            return
         try:
-            print("setWebhook:", telegram.set_webhook(f"{public_url}/telegram", WEBHOOK_SECRET))
-        except Exception as error:  # never crash on boot over this
+            result = telegram.set_webhook(f"{public_url}/telegram", secret)
+        except Exception as error:  # never crash over this; we'll retry next request
             print("could not set Telegram webhook:", error)
+            return
+        print("setWebhook:", result)
+        if result.get("ok"):
+            state["webhook_fingerprint"] = fingerprint
+            storage.save_state(state)
 
 
 @app.post("/telegram")
 async def telegram_webhook(request: Request,
                            x_telegram_bot_api_secret_token: str = Header(default="")):
     # Telegram sends our secret back in this header, so we know it's really Telegram.
-    if WEBHOOK_SECRET and x_telegram_bot_api_secret_token != WEBHOOK_SECRET:
+    secret = os.getenv("TELEGRAM_WEBHOOK_SECRET", "")
+    if secret and x_telegram_bot_api_secret_token != secret:
         raise HTTPException(status_code=403)
     update = await request.json()
     with lock:

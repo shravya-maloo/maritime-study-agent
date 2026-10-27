@@ -5,9 +5,8 @@ quizzes me on them over Telegram every night, focusing on the topics I'm
 weakest at. It runs on [Maritime](https://maritime.sh), which hosts AI agents
 that sleep when idle and wake up in about a second with their files intact.
 
-It grew out of a quiz tool I built at Quadrant Technologies with Azure OpenAI,
-which turned documents into quizzes. That version needed someone to open it
-and click a button. This one comes to me.
+Access it here: LINK TO THE PROJECT
+
 
 ## What it does
 
@@ -74,19 +73,3 @@ and click a button. This one comes to me.
 | `QUIZ_CRON` | no | Default `0 21 * * *` (9:00 pm) |
 | `QUIZ_TIMEZONE` | no | Default `America/Los_Angeles` |
 | `TELEGRAM_MODE` | no | `webhook` (default) or `poll` |
-
-## Run it on your laptop
-
-You can try the quiz flow without Telegram, using the `/chat` endpoint:
-
-```bash
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-export DATA_DIR=./data LLM_API_KEY=your-key   # plus LLM_BASE_URL/LLM_MODEL for Groq
-python start.py
-# in a second terminal:
-curl -s localhost:8080/chat -H 'Content-Type: application/json' -d '{"message": "/quiz"}'
-curl -s localhost:8080/chat -H 'Content-Type: application/json' -d '{"message": "my answer"}'
-```
-
-To deploy it, see [DEPLOY.md](DEPLOY.md).
